@@ -1,10 +1,10 @@
 {
   "name": "@rappopo/dab-knex",
-  "version": "0.0.1",
-  "description": "A KnexJS DAL that so confusing!",
+  "version": "0.0.2",
+  "description": "A KnexJS data access layer that is so confusing!",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha --exit"
   },
   "keywords": [
     "dab",
@@ -25,6 +25,7 @@
   "author": "Ardhi Lukianto <ardhi@lukianto.com>",
   "license": "MIT",
   "dependencies": {
+    "@rappopo/dab": "0.0.1",
     "knex": "^0.14.2",
     "knex-doc-filter": "^0.1.0"
   },
