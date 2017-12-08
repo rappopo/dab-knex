@@ -336,32 +336,28 @@ class DabKnex extends Dab {
       const table = params.table || this.options.table
       if (!this._.isArray(body))
         return reject(new Error('Require array'))
-
       this._.each(body, (b, i) => {
-        if (!b[this.options.idSrc])
-          b[this.options.idSrc] = this.uuid()
-        body[i] = b
+        body[i] = b || this.uuid()
       })
-      const keys = this._(body).map(this.options.idSrc).value()
 
       this.client.select('id').from(table)
-      .whereIn('id', keys).asCallback((err, docs) => {
+      .whereIn('id', body).asCallback((err, docs) => {
         if (err)
           return reject(err)
         let info = this._.map(docs, 'id'),
           newBody = this._.clone(body)
         this._.pullAllWith(newBody, info, (i,x) => {
-          return i.id !== x
+          return i !== x
         })
         async.mapSeries(newBody, (b, cb) => {
-          this.client(table).where('id', b.id).del().asCallback((err, result) => {
-            cb(null, err ? { id: b.id, message: err.message } : null)
+          this.client(table).where('id', b).del().asCallback((err, result) => {
+            cb(null, err ? { id: b, message: err.message } : null)
           })
         }, (err, result) => {
           let ok = 0, status = []
           this._.each(body, (r, i) => {
-            let stat = { success: info.indexOf(r.id) > -1 ? true : false }
-            stat[this.options.idDest] = r.id
+            let stat = { success: info.indexOf(r) > -1 ? true : false }
+            stat[this.options.idDest] = r
             if (!stat.success)
               stat.message = 'Not found'
             else
