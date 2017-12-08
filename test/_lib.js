@@ -17,6 +17,11 @@ module.exports = {
     { id: 'jack-bauer', name: 'Jack Bauer' },
     { id: 'james-bond', name: 'James Bond' }
   ],
+  bulkDocs: [
+    { id: 'jack-bauer', name: 'Jack Bauer' },
+    { id: 'johnny-english', name: 'Johnny English' },
+    { name: 'Jane Boo' }
+  ],
   timeout: 5000,
   resetDb: function (callback) {
     const knex = require('knex')(this.options)

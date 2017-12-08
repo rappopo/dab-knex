@@ -2,6 +2,7 @@
 
 const path = require('path'),
   Dab = require('@rappopo/dab'),
+  async = require('async'),
   docFilter = require('knex-doc-filter')
 
 class DabKnex extends Dab {
@@ -212,6 +213,176 @@ class DabKnex extends Dab {
       })
     })
   }
+
+  bulkCreate (body, params) {
+    [params] = this.sanitize(params)
+    this.setClient(params)
+    return new Promise((resolve, reject) => {
+      const table = params.table || this.options.table
+      if (!this._.isArray(body))
+        return reject(new Error('Require array'))
+
+      this._.each(body, (b, i) => {
+        if (!b[this.options.idSrc])
+          b[this.options.idSrc] = this.uuid()
+        body[i] = b
+      })
+      const keys = this._(body).map(this.options.idSrc).value()
+
+      this.client.select('id').from(table)
+      .whereIn('id', keys).asCallback((err, docs) => {
+        if (err)
+          return reject(err)
+        let info = this._.map(docs, 'id'),
+          newBody = this._.clone(body)
+        this._.pullAllWith(newBody, info, (i,x) => {
+          return i.id === x
+        })
+        async.mapSeries(newBody, (b, cb) => {
+          this.client(table).insert(this._.omit(b, 'id'), 'id').asCallback((err, result) => {
+            cb(null, err ? { id: b.id, message: err.message } : null)
+          })
+        }, (err, result) => {
+          let ok = 0, status = []
+          this._.each(body, (r, i) => {
+            let stat = { success: info.indexOf(r.id) === -1 ? true : false }
+            stat[this.options.idDest] = r.id
+            if (!stat.success)
+              stat.message = 'Exists'
+            else
+              ok++
+            status.push(stat)
+          })
+          let data = {
+            success: true,
+            stat: {
+              ok: ok,
+              fail: body.length - ok,
+              total: body.length
+            },
+            data: status
+          }
+          resolve(data)
+        })    
+      })
+    })
+  }
+
+  bulkUpdate (body, params) {
+    [params] = this.sanitize(params)
+    this.setClient(params)
+    return new Promise((resolve, reject) => {
+      const table = params.table || this.options.table
+      if (!this._.isArray(body))
+        return reject(new Error('Require array'))
+
+      this._.each(body, (b, i) => {
+        if (!b[this.options.idSrc])
+          b[this.options.idSrc] = this.uuid()
+        body[i] = b
+      })
+      const keys = this._(body).map(this.options.idSrc).value()
+
+      this.client.select('id').from(table)
+      .whereIn('id', keys).asCallback((err, docs) => {
+        if (err)
+          return reject(err)
+        let info = this._.map(docs, 'id'),
+          newBody = this._.clone(body)
+        this._.pullAllWith(newBody, info, (i,x) => {
+          return i.id !== x
+        })
+        async.mapSeries(newBody, (b, cb) => {
+          this.client(table).where('id', b.id).update(this._.omit(b, 'id')).asCallback((err, result) => {
+            cb(null, err ? { id: b.id, message: err.message } : null)
+          })
+        }, (err, result) => {
+          let ok = 0, status = []
+          this._.each(body, (r, i) => {
+            let stat = { success: info.indexOf(r.id) > -1 ? true : false }
+            if (stat.success) {
+              let rec = this._.find(result, { id: r.id })
+              if (rec) {
+                stat.success = false
+                stat.message = rec.message
+              }
+            }
+            stat[this.options.idDest] = r.id
+            if (!stat.success && !stat.message)
+              stat.message = 'Not found'
+            else
+              ok++
+            status.push(stat)
+          })
+          let data = {
+            success: true,
+            stat: {
+              ok: ok,
+              fail: body.length - ok,
+              total: body.length
+            },
+            data: status
+          }
+          resolve(data)
+        })
+      })
+    })
+  }
+
+  bulkRemove (body, params) {
+    [params] = this.sanitize(params)
+    this.setClient(params)
+    return new Promise((resolve, reject) => {
+      const table = params.table || this.options.table
+      if (!this._.isArray(body))
+        return reject(new Error('Require array'))
+
+      this._.each(body, (b, i) => {
+        if (!b[this.options.idSrc])
+          b[this.options.idSrc] = this.uuid()
+        body[i] = b
+      })
+      const keys = this._(body).map(this.options.idSrc).value()
+
+      this.client.select('id').from(table)
+      .whereIn('id', keys).asCallback((err, docs) => {
+        if (err)
+          return reject(err)
+        let info = this._.map(docs, 'id'),
+          newBody = this._.clone(body)
+        this._.pullAllWith(newBody, info, (i,x) => {
+          return i.id !== x
+        })
+        async.mapSeries(newBody, (b, cb) => {
+          this.client(table).where('id', b.id).del().asCallback((err, result) => {
+            cb(null, err ? { id: b.id, message: err.message } : null)
+          })
+        }, (err, result) => {
+          let ok = 0, status = []
+          this._.each(body, (r, i) => {
+            let stat = { success: info.indexOf(r.id) > -1 ? true : false }
+            stat[this.options.idDest] = r.id
+            if (!stat.success)
+              stat.message = 'Not found'
+            else
+              ok++
+            status.push(stat)
+          })
+          let data = {
+            success: true,
+            stat: {
+              ok: ok,
+              fail: body.length - ok,
+              total: body.length
+            },
+            data: status
+          }
+          resolve(data)
+        })
+      })
+    })
+  }
+
 
 }
 
