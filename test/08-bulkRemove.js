@@ -27,13 +27,13 @@ describe('bulkRemove', function () {
 
   it('should return the correct bulk status', function() {
     const cls = new Cls(lib.options)
-    let p = cls.bulkRemove(lib._.map(lib.bulkDocs, 'id'))
+    let p = cls.bulkRemove(lib._.map(lib.bulkDocs, 'id'), { withDetail: true })
     return Promise.all([
       expect(p).to.eventually.have.property('stat').that.have.property('ok').equal(1),
       expect(p).to.eventually.have.property('stat').that.have.property('fail').equal(2),
       expect(p).to.eventually.have.property('stat').that.have.property('total').equal(3),
-      expect(p).to.eventually.have.property('data').that.containSubset([{ id: 'jack-bauer', success: true }]),
-      expect(p).to.eventually.have.property('data').that.containSubset([{ id: 'johnny-english', message: 'Not found' }])
+      expect(p).to.eventually.have.property('detail').that.containSubset([{ id: 'jack-bauer', success: true }]),
+      expect(p).to.eventually.have.property('detail').that.containSubset([{ id: 'johnny-english', message: 'Not found' }])
     ])
   })
 

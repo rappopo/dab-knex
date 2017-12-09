@@ -229,6 +229,7 @@ class DabKnex extends Dab {
       })
       const keys = this._(body).map(this.options.idSrc).value()
 
+
       this.client.select('id').from(table)
       .whereIn('id', keys).asCallback((err, docs) => {
         if (err)
@@ -239,7 +240,7 @@ class DabKnex extends Dab {
           return i.id === x
         })
         async.mapSeries(newBody, (b, cb) => {
-          this.client(table).insert(this._.omit(b, 'id'), 'id').asCallback((err, result) => {
+          this.client(table).insert(b, 'id').asCallback((err, result) => {
             cb(null, err ? { id: b.id, message: err.message } : null)
           })
         }, (err, result) => {
@@ -259,9 +260,10 @@ class DabKnex extends Dab {
               ok: ok,
               fail: body.length - ok,
               total: body.length
-            },
-            data: status
+            }
           }
+          if (params.withDetail)
+            data.detail = status
           resolve(data)
         })    
       })
@@ -320,9 +322,10 @@ class DabKnex extends Dab {
               ok: ok,
               fail: body.length - ok,
               total: body.length
-            },
-            data: status
+            }
           }
+          if (params.withDetail)
+            data.detail = status
           resolve(data)
         })
       })
@@ -370,9 +373,10 @@ class DabKnex extends Dab {
               ok: ok,
               fail: body.length - ok,
               total: body.length
-            },
-            data: status
+            }
           }
+          if (params.withDetail)
+            data.detail = status
           resolve(data)
         })
       })

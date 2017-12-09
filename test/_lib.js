@@ -1,7 +1,8 @@
 'use strict'
 
 const fs = require('fs'),
-  _ = require('lodash')
+  _ = require('lodash'),
+  async = require('async')
 
 module.exports = {
   _: _,
@@ -9,6 +10,14 @@ module.exports = {
     client: 'sqlite3',
     connection: {
       filename: '/tmp/test.sqlite3'
+    },
+    table: 'test',
+    useNullAsDefault: true
+  },
+  options1: {
+    client: 'sqlite3',
+    connection: {
+      filename: '/tmp/test1.sqlite3'
     },
     table: 'test',
     useNullAsDefault: true
@@ -24,23 +33,18 @@ module.exports = {
   ],
   timeout: 5000,
   resetDb: function (callback) {
-    const knex = require('knex')(this.options)
-    knex.schema.createTableIfNotExists(this.options.table, table => {
-      table.string('id').notNullable().primary()
-      table.string('name').notNullable()
-      table.string('gender')
-    })
-    .then(result => {
-      return knex(this.options.table).del()
-    })
-    .then(result => {
-      return knex(this.options.table).insert(this.dummyData)
-    })
-    .then(result => {
-      callback()
-    })
-    .catch(err => {
-      callback(err)
-    }) 
+    let me = this
+    async.mapSeries(['options', 'options1'], function(o, callb) {
+      let knex = require('knex')(me[o])
+      knex.schema.createTableIfNotExists(me[o].table, table => {
+        table.string('id').notNullable().primary()
+        table.string('name').notNullable()
+        table.string('gender')
+      }).asCallback(function(err) {
+        knex(me[o].table).del().asCallback(function(err) {
+          knex(me[o].table).insert(me.dummyData).asCallback(callb)
+        })
+      })
+    }, callback)
   }
 }
