@@ -39,6 +39,19 @@ dab.findOne('my-doc', { table: 'othertable' }).then(function(doc) { ... })
 
 `table`: the default table to use. If you don't provide the table in method's params explicitly, this one will be used. Optional, defauts to *test*
 
+## Features
+
+* [x] [find](https://github.com/rappopo/dab/blob/master/doc/FIND.md)
+* [x] [findOne](https://github.com/rappopo/dab/blob/master/doc/FINDONE.md)
+* [x] [create](https://github.com/rappopo/dab/blob/master/doc/CREATE.md)
+* [x] [update](https://github.com/rappopo/dab/blob/master/doc/UPDATE.md)
+* [x] [remove](https://github.com/rappopo/dab/blob/master/doc/REMOVE.md)
+* [x] [bulkCreate](https://github.com/rappopo/dab/blob/master/doc/BULKCREATE.md)
+* [x] [bulkUpdate](https://github.com/rappopo/dab/blob/master/doc/BULKUPDATE.md)
+* [x] [bulkDelete](https://github.com/rappopo/dab/blob/master/doc/BULKDELETE.md)
+* [x] [copyFrom](https://github.com/rappopo/dab/blob/master/doc/COPYFROM.md)
+* [x] [copyTo](https://github.com/rappopo/dab/blob/master/doc/COPYTO.md)
+
 ## Misc
 
 * [Methods](https://github.com/rappopo/dab)
