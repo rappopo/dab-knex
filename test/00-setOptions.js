@@ -13,22 +13,11 @@ describe('setOptions', function () {
   it('should return the default options', function () {
     const cls = new Cls()
     expect(cls.options).to.include({
-      idSrc: 'id',
-      idDest: 'id',
       client: 'sqlite3',
       table: 'test'
     })
     expect(cls.options.connection).to.include({
       filename: '/tmp/test.sqlite3'
-    })
-  })
-
-  it('should return options with custom idDest', function () {
-    const cls = new Cls({ 
-      idDest: 'uid'
-    })
-    expect(cls.options).to.include({
-      idDest: 'uid'
     })
   })
 

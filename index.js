@@ -12,8 +12,6 @@ class DabKnex extends Dab {
 
   setOptions (options) {
     super.setOptions(this._.merge(this.options, {
-      idSrc: 'id',
-      idDest: options.idDest || options.idSrc || 'id',
       client: options.client || 'sqlite3',
       connection: options.connection || {
         filename: '/tmp/test.sqlite3'
@@ -123,7 +121,7 @@ class DabKnex extends Dab {
   _create (body, params, callback) {
     this.client(params.table || this.options.table).insert(body, 'id')
     .then(result => {
-      let id = this._.isString(body[this.options.idSrc]) ? body[this.options.idSrc] : result[0]
+      let id = this._.isString(body.id) ? body.id : result[0]
       this._findOne(id, params, callback)
     })
     .catch(err => {
@@ -138,10 +136,8 @@ class DabKnex extends Dab {
     [params, body] = this.sanitize(params, body)
     this.setClient(params)
     return new Promise((resolve, reject) => {
-      let id
-      [body, id] = this.delFakeGetReal(body)
-      if (id) {
-        this._findOne(id, params, result => {
+      if (body.id) {
+        this._findOne(body.id, params, result => {
           if (result.success) 
             return reject(new Error('Exists'))
           this._create(body, params, result => {
@@ -165,14 +161,14 @@ class DabKnex extends Dab {
   update (id, body, params) {
     [params, body] = this.sanitize(params, body)
     this.setClient(params)
-    body = this._.omit(body, [this.options.idDest || this.options.idSrc])
+    body = this._.omit(body, ['id'])
     return new Promise((resolve, reject) => {
       this._findOne(id, params, result => {
         if (!result.success)
           return reject(result.err)
         let source = result.data
         this.client(params.table || this.options.table)
-        .where(this.options.idSrc, id)
+        .where('id', id)
         .update(body)
         .then(result => {
           this._findOne(id, params, result => {
@@ -200,7 +196,7 @@ class DabKnex extends Dab {
         if (!result.success)
           return reject(result.err)
         let source = result.data
-        this.client(params.table || this.options.table).where(this.options.idSrc, id).del()
+        this.client(params.table || this.options.table).where('id', id).del()
         .then(result => {
           let data = {
             success: true
@@ -223,11 +219,11 @@ class DabKnex extends Dab {
         return reject(new Error('Require array'))
 
       this._.each(body, (b, i) => {
-        if (!b[this.options.idSrc])
-          b[this.options.idSrc] = this.uuid()
+        if (!b.id)
+          b.id = this.uuid()
         body[i] = b
       })
-      const keys = this._(body).map(this.options.idSrc).value()
+      const keys = this._(body).map('id').value()
 
 
       this.client.select('id').from(table)
@@ -247,7 +243,7 @@ class DabKnex extends Dab {
           let ok = 0, status = []
           this._.each(body, (r, i) => {
             let stat = { success: info.indexOf(r.id) === -1 ? true : false }
-            stat[this.options.idDest] = r.id
+            stat.id = r.id
             if (!stat.success)
               stat.message = 'Exists'
             else
@@ -279,11 +275,11 @@ class DabKnex extends Dab {
         return reject(new Error('Require array'))
 
       this._.each(body, (b, i) => {
-        if (!b[this.options.idSrc])
-          b[this.options.idSrc] = this.uuid()
+        if (!b.id)
+          b.id = this.uuid()
         body[i] = b
       })
-      const keys = this._(body).map(this.options.idSrc).value()
+      const keys = this._(body).map('id').value()
 
       this.client.select('id').from(table)
       .whereIn('id', keys).asCallback((err, docs) => {
@@ -309,7 +305,7 @@ class DabKnex extends Dab {
                 stat.message = rec.message
               }
             }
-            stat[this.options.idDest] = r.id
+            stat.id = r.id
             if (!stat.success && !stat.message)
               stat.message = 'Not found'
             else
@@ -360,7 +356,7 @@ class DabKnex extends Dab {
           let ok = 0, status = []
           this._.each(body, (r, i) => {
             let stat = { success: info.indexOf(r) > -1 ? true : false }
-            stat[this.options.idDest] = r
+            stat.id = r
             if (!stat.success)
               stat.message = 'Not found'
             else
