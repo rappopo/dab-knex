@@ -24,11 +24,20 @@ const dab = new DabKnex({
   client: 'sqlite3',
   connection: {
     filename: '/tmp/mydb.sqlite3'
-  },
-  table: 'mytable'
+  }
 })
-...
-dab.findOne('my-doc', { table: 'othertable' }).then(function(doc) { ... })
+
+// prepare collections
+dab.createCollection({ name: 'test' })
+  .then(result => {
+    return dab.bulkCreate(data, { collection: 'test' })
+  })
+  .then(result => {
+    ...    
+    // lets dab!
+    dab.findOne('my-doc', 'test').then(function(doc) { ... })
+    ...
+  })
 ```
 
 ## Options
@@ -36,8 +45,6 @@ dab.findOne('my-doc', { table: 'othertable' }).then(function(doc) { ... })
 `client`: your Knex's client database library
 
 `connection`: your Knex's connection settings
-
-`table`: the default table to use. If you don't provide the table in method's params explicitly, this one will be used. Optional, defauts to *test*
 
 ## Features
 
@@ -51,6 +58,9 @@ dab.findOne('my-doc', { table: 'othertable' }).then(function(doc) { ... })
 * [x] [bulkRemove](https://docs.rappopo.com/dab/method/bulk-remove/)
 * [x] [copyFrom](https://docs.rappopo.com/dab/method/copy-from/)
 * [x] [copyTo](https://docs.rappopo.com/dab/method/copy-to/)
+* [x] [createCollection](https://docs.rappopo.com/dab/method/create-collection/)
+* [x] [renameCollection](https://docs.rappopo.com/dab/method/rename-collection/)
+* [x] [removeCollection](https://docs.rappopo.com/dab/method/remove-collection/)
 
 ## Misc
 

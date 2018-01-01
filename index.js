@@ -1,7 +1,7 @@
 'use strict'
 
 const path = require('path'),
-  Dab = require('@rappopo/dab'),
+  Dab = require('@rappopo/dab').Dab,
   async = require('async'),
   docFilter = require('knex-doc-filter')
 
@@ -10,34 +10,7 @@ class DabKnex extends Dab {
     super(options)
   }
 
-  setOptions (options) {
-    super.setOptions(this._.merge(this.options, {
-      client: options.client || 'sqlite3',
-      connection: options.connection || {
-        filename: '/tmp/test.sqlite3'
-      },
-      table: 'test'
-    }))
-    if (this.options.client === 'sqlite3')
-      this.options.options.useNullAsDefault = true
-  }
-
-  sanitize (params, body = {}) {
-    body = this._.cloneDeep(body)
-    params = typeof params === 'string' ? { table: params } : (params || {})
-    return [params, body]
-  }
-
-  setClient (params) {
-    if (this.client) return
-    let opt = this._.merge(this.options.options, {
-      client: params.client || this.options.client,
-      connection: params.connection || this.options.connection
-    })
-    this.client = require('knex')(opt)
-  }
-
-  buildSort (sort) {
+  _buildSort (sort) {
     let result = []
     this._.each(sort, s => {
       this._.forOwn(s, (v, k) => {
@@ -47,45 +20,109 @@ class DabKnex extends Dab {
     return result.join(', ')
   }
 
+  _error (err) {
+    let message = ''
+    if (err.message.indexOf('no such table: '))
+      message = 'Collection not found'
+    let e = new Error(message)
+    e.source = err
+    return e
+  }
+
+  setOptions (options) {
+    super.setOptions(this._.merge(this.options, {
+      client: options.client || 'sqlite3',
+      connection: options.connection || {
+        filename: '/tmp/default.sqlite3'
+      }
+    }))
+    if (this.options.client === 'sqlite3')
+      this.options.options.useNullAsDefault = true
+  }
+
+  setClient () {
+    if (this.client) return
+    let opt = this._.merge(this.options.options, {
+      client: this.options.client,
+      connection: this.options.connection
+    })
+    this.client = require('knex')(opt)
+    return this
+  }
+
+  createCollection (coll) {
+    return new Promise((resolve, reject) => {
+      super.createCollection(coll)
+        .then(result => {
+          this.setClient()
+          resolve(result)
+        })
+        .catch(reject)
+    })
+  }
+
+  renameCollection (oldName, newName) {
+    return new Promise((resolve, reject) => {
+      super.renameCollection(oldName, newName)
+        .then(result => {
+          this.setClient()
+          resolve(result)
+        })
+        .catch(reject)
+    })
+  }
+
+  removeCollection (name) {
+    return new Promise((resolve, reject) => {
+      super.removeCollection(name)
+        .then(result => {
+          this.setClient()
+          resolve(result)
+        })
+        .catch(reject)
+    })
+  }
+
   find (params) {
     [params] = this.sanitize(params)
     this.setClient(params)
     let limit = params.limit || this.options.limit,
       skip = ((params.page || 1) - 1) * limit,
-      sort = this.buildSort(params.sort),
-      query = params.query || {},
-      table = params.table || this.options.table
+      sort = this._buildSort(params.sort),
+      query = params.query || {}
     return new Promise((resolve, reject) => {
-      let total, sel = this.client(table).limit(limit).offset(skip)
-      if (!this._.isEmpty(sort)) 
-        sel = sel.orderByRaw(sort)
-      Promise.all([
-        docFilter(this.client(table), query),
-        docFilter(sel, query)
-      ])
-      .then(results => {
+      let total
+      docFilter(this.client(params.collection).count('* as cnt'), query)
+      .then(result => {
+        total = parseInt(result[0].cnt)
+        let sel = this.client(params.collection).limit(limit).offset(skip)
+        if (!this._.isEmpty(sort)) 
+          sel = sel.orderByRaw(sort)
+        return docFilter(sel, query)
+      })
+      .then(result => {
         let data = { 
           success: true,
-          total: results[0][0],
+          total: total,
           data: [] 
         }
-        results[1].forEach((d, i) => {
-          data.data.push(this.convertDoc(d))
+        result.forEach((d, i) => {
+          data.data.push(this.convert(d, { collection: params.collection }))
         })
         resolve(data)
       })
-      .catch(reject)
+      .catch(err => reject(this._error(err)))
     })
   }
 
   _findOne (id, params, callback) {
-    this.client(params.table || this.options.table)
+    this.client(params.collection)
     .where('id', id)
     .then(data => {
       if (data.length === 0) {
         return callback({
           success: false,
-          err: new Error('Not found')
+          err: new Error('Document not found')
         })
       }
       data = {
@@ -97,7 +134,7 @@ class DabKnex extends Dab {
     .catch(err => {
       callback({
         success: false,
-        err: err
+        err: this._error(err)
       })          
     })
   }
@@ -106,12 +143,12 @@ class DabKnex extends Dab {
     [params] = this.sanitize(params)
     this.setClient(params)
     return new Promise((resolve, reject) => {
-      this._findOne(id, params || {}, result => {
+      this._findOne(id, params, result => {
         if (!result.success)
           return reject(result.err)
         let data = {
           success: true,
-          data: this.convertDoc(result.data)
+          data: this.convert(result.data, { collection: params.collection })
         }
         resolve(data)
       })
@@ -119,7 +156,7 @@ class DabKnex extends Dab {
   }
 
   _create (body, params, callback) {
-    this.client(params.table || this.options.table).insert(body, 'id')
+    this.client(params.collection).insert(body, 'id')
     .then(result => {
       let id = this._.isString(body.id) ? body.id : result[0]
       this._findOne(id, params, callback)
@@ -127,7 +164,7 @@ class DabKnex extends Dab {
     .catch(err => {
       callback({
         success: false,
-        err: err
+        err: this._error(err)
       })
     })
   }
@@ -139,11 +176,11 @@ class DabKnex extends Dab {
       if (body.id) {
         this._findOne(body.id, params, result => {
           if (result.success) 
-            return reject(new Error('Exists'))
+            return reject(new Error('Document already exists'))
           this._create(body, params, result => {
             if (!result.success)
               return reject(result.err)
-            result.data = this.convertDoc(result.data)
+            result.data = this.convert(result.data, { collection: params.collection })
             resolve(result)
           })
         })
@@ -151,7 +188,7 @@ class DabKnex extends Dab {
         this._create(body, params, result => {
           if (!result.success)
             return reject(result.err)
-          result.data = this.convertDoc(result.data)
+          result.data = this.convert(result.data, { collection: params.collection })
           resolve(result)
         })        
       }
@@ -167,7 +204,7 @@ class DabKnex extends Dab {
         if (!result.success)
           return reject(result.err)
         let source = result.data
-        this.client(params.table || this.options.table)
+        this.client(params.collection)
         .where('id', id)
         .update(body)
         .then(result => {
@@ -176,10 +213,10 @@ class DabKnex extends Dab {
               return reject(result.err)
             let data = {
               success: true,
-              data: this.convertDoc(result.data)
+              data: this.convert(result.data, { collection: params.collection })
             }
             if (params.withSource)
-              data.source = source
+              data.source = this.convert(source, { collection: params.collection })
             resolve(data)
           })
         })
@@ -196,13 +233,13 @@ class DabKnex extends Dab {
         if (!result.success)
           return reject(result.err)
         let source = result.data
-        this.client(params.table || this.options.table).where('id', id).del()
+        this.client(params.collection).where('id', id).del()
         .then(result => {
           let data = {
             success: true
           }
           if (params.withSource)
-            data.source = source
+            data.source = this.convert(source, { collection: params.collection })
           resolve(data)
         })
         .catch(reject)
@@ -211,12 +248,11 @@ class DabKnex extends Dab {
   }
 
   bulkCreate (body, params) {
-    [params] = this.sanitize(params)
+    [params, body] = this.sanitize(params, body)
     this.setClient(params)
     return new Promise((resolve, reject) => {
-      const table = params.table || this.options.table
       if (!this._.isArray(body))
-        return reject(new Error('Require array'))
+        return reject(new Error('Requires an array'))
 
       this._.each(body, (b, i) => {
         if (!b.id)
@@ -226,17 +262,17 @@ class DabKnex extends Dab {
       const keys = this._(body).map('id').value()
 
 
-      this.client.select('id').from(table)
+      this.client.select('id').from(params.collection)
       .whereIn('id', keys).asCallback((err, docs) => {
         if (err)
-          return reject(err)
+          return reject(this._error(err))
         let info = this._.map(docs, 'id'),
           newBody = this._.clone(body)
         this._.pullAllWith(newBody, info, (i,x) => {
           return i.id === x
         })
         async.mapSeries(newBody, (b, cb) => {
-          this.client(table).insert(b, 'id').asCallback((err, result) => {
+          this.client(params.collection).insert(b, 'id').asCallback((err, result) => {
             cb(null, err ? { id: b.id, message: err.message } : null)
           })
         }, (err, result) => {
@@ -245,7 +281,7 @@ class DabKnex extends Dab {
             let stat = { success: info.indexOf(r.id) === -1 ? true : false }
             stat.id = r.id
             if (!stat.success)
-              stat.message = 'Exists'
+              stat.message = 'Document already exists'
             else
               ok++
             status.push(stat)
@@ -267,12 +303,11 @@ class DabKnex extends Dab {
   }
 
   bulkUpdate (body, params) {
-    [params] = this.sanitize(params)
+    [params, body] = this.sanitize(params, body)
     this.setClient(params)
     return new Promise((resolve, reject) => {
-      const table = params.table || this.options.table
       if (!this._.isArray(body))
-        return reject(new Error('Require array'))
+        return reject(new Error('Requires an array'))
 
       this._.each(body, (b, i) => {
         if (!b.id)
@@ -281,17 +316,19 @@ class DabKnex extends Dab {
       })
       const keys = this._(body).map('id').value()
 
-      this.client.select('id').from(table)
+      this.client.select('id').from(params.collection)
       .whereIn('id', keys).asCallback((err, docs) => {
         if (err)
-          return reject(err)
+          return reject(this._error(err))
         let info = this._.map(docs, 'id'),
-          newBody = this._.clone(body)
-        this._.pullAllWith(newBody, info, (i,x) => {
-          return i.id !== x
+          newBody = []
+
+        this._.each(body, b => {
+          if (info.indexOf(b.id) > -1)
+            newBody.push(b)
         })
         async.mapSeries(newBody, (b, cb) => {
-          this.client(table).where('id', b.id).update(this._.omit(b, 'id')).asCallback((err, result) => {
+          this.client(params.collection).where('id', b.id).update(this._.omit(b, 'id')).asCallback((err, result) => {
             cb(null, err ? { id: b.id, message: err.message } : null)
           })
         }, (err, result) => {
@@ -307,7 +344,7 @@ class DabKnex extends Dab {
             }
             stat.id = r.id
             if (!stat.success && !stat.message)
-              stat.message = 'Not found'
+              stat.message = 'Document not found'
             else
               ok++
             status.push(stat)
@@ -329,27 +366,27 @@ class DabKnex extends Dab {
   }
 
   bulkRemove (body, params) {
-    [params] = this.sanitize(params)
+    [params, body] = this.sanitize(params, body)
     this.setClient(params)
     return new Promise((resolve, reject) => {
-      const table = params.table || this.options.table
       if (!this._.isArray(body))
-        return reject(new Error('Require array'))
+        return reject(new Error('Requires an array'))
       this._.each(body, (b, i) => {
         body[i] = b || this.uuid()
       })
 
-      this.client.select('id').from(table)
+      this.client.select('id').from(params.collection)
       .whereIn('id', body).asCallback((err, docs) => {
         if (err)
-          return reject(err)
+          return reject(this._error(err))
         let info = this._.map(docs, 'id'),
-          newBody = this._.clone(body)
-        this._.pullAllWith(newBody, info, (i,x) => {
-          return i !== x
+          newBody = []
+        this._.each(body, b => {
+          if (info.indexOf(b) > -1)
+            newBody.push(b)
         })
         async.mapSeries(newBody, (b, cb) => {
-          this.client(table).where('id', b).del().asCallback((err, result) => {
+          this.client(params.collection).where('id', b).del().asCallback((err, result) => {
             cb(null, err ? { id: b, message: err.message } : null)
           })
         }, (err, result) => {
@@ -358,7 +395,7 @@ class DabKnex extends Dab {
             let stat = { success: info.indexOf(r) > -1 ? true : false }
             stat.id = r
             if (!stat.success)
-              stat.message = 'Not found'
+              stat.message = 'Document not found'
             else
               ok++
             status.push(stat)

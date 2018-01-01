@@ -14,10 +14,11 @@ describe('setOptions', function () {
     const cls = new Cls()
     expect(cls.options).to.include({
       client: 'sqlite3',
-      table: 'test'
+      limit: 25
     })
+
     expect(cls.options.connection).to.include({
-      filename: '/tmp/test.sqlite3'
+      filename: '/tmp/default.sqlite3'
     })
   })
 
