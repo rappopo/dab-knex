@@ -46,4 +46,18 @@ describe('renameCollection', function () {
         done()
       })
   })
+
+  it('should forced you to rename associated table', function (done) {
+    const cls = new Cls(lib.options)
+    cls.createCollection(lib.schemaFull)
+      .then(result => {
+        return cls.renameCollection('full', 'newtest', { withSchema: true })
+      })
+      .then(result => {
+        expect(result).to.have.property('success', true)
+        done()
+      })
+  })
+
+
 })

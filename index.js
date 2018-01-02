@@ -22,8 +22,10 @@ class DabKnex extends Dab {
 
   _error (err) {
     let message = ''
-    if (err.message.indexOf('no such table: '))
+    if (err.message.indexOf('no such table: ') > -1)
       message = 'Collection not found'
+    if (this._.isEmpty(message))
+      return err
     let e = new Error(message)
     e.source = err
     return e
@@ -50,36 +52,78 @@ class DabKnex extends Dab {
     return this
   }
 
-  createCollection (coll) {
+  createCollection (coll, params) {
+    params = params || {}
     return new Promise((resolve, reject) => {
       super.createCollection(coll)
         .then(result => {
+          this.collection[coll.name].attribName = 'table'
           this.setClient()
-          resolve(result)
+          let rebuild = params.withSchema && !this._.isEmpty(this.collection[coll.name].fields)
+          if (!rebuild)
+            return resolve(result)
+          return this.client.schema.dropTableIfExists(coll.name)
         })
-        .catch(reject)
+        .then(result => {
+          return this.client.schema.createTable(coll.name, table => {
+            this._.each(this.collection[coll.name].fields, f => {
+              let column
+              switch(f.type) {
+                case 'string':
+                  column = table.string(f.id, f.length)
+                  break
+                case 'datetime':
+                  column = table.dateTime(f.id)
+                default:
+                  column = table[f.type](f.id)
+              }
+              if (f.required)
+                column.notNullable()
+              if (f.default !== undefined)
+                column.defaultTo(f.default)
+            })
+          })
+        })
+        .then(result => {
+          resolve({ success: true })
+        })
+        .catch(err => reject(this._error(err)))
     })
   }
 
-  renameCollection (oldName, newName) {
+  renameCollection (oldName, newName, params) {
+    params = params || {}
     return new Promise((resolve, reject) => {
       super.renameCollection(oldName, newName)
         .then(result => {
           this.setClient()
-          resolve(result)
+          let rebuild = params.withSchema && !this._.isEmpty(this.collection[newName].fields)
+          if (!rebuild)
+            return resolve(result)
+          return this.client.schema.renameTable(oldName, newName)
         })
-        .catch(reject)
+        .then(result => {
+          resolve({ success: true })
+        })
+        .catch(err => reject(this._error(err)))
     })
   }
 
-  removeCollection (name) {
+  removeCollection (name, params) {
+    params = params || {}
+    let rebuild = params.withSchema && this.collection[name] && !this._.isEmpty(this.collection[name].fields)
     return new Promise((resolve, reject) => {
       super.removeCollection(name)
         .then(result => {
           this.setClient()
-          resolve(result)
+          if (!rebuild)
+            return resolve(result)
+          return this.client.schema.dropTableIfExists(name)
         })
-        .catch(reject)
+        .then(result => {
+          resolve({ success: true })
+        })
+        .catch(err => reject(this._error(err)))
     })
   }
 

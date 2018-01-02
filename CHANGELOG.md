@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1
+
+* Fix bug on proxying knex's error to dab
+* Added withSchema to params in createCollection(), renameCollection() and removeCollection()
+
 ## 0.1.0
 
 * Updated to @rappopo/dab@0.1.0 and enforce new specs

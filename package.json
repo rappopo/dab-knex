@@ -1,6 +1,6 @@
 {
   "name": "@rappopo/dab-knex",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A KnexJS data access layer that is so confusing!",
   "main": "index.js",
   "scripts": {
