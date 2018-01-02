@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+* Updated to @rappopo/dab@0.1.1 specs
+
 ## 0.1.1
 
 * Fix bug on proxying knex's error to dab

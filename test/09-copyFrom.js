@@ -45,7 +45,7 @@ describe('copyFrom', function () {
         return cls.client('full').truncate()
       })
       .then(result => {
-        return cls.copyFrom(src, { collectionSrc: 'test', collectionDest: 'full', withDetail: true })
+        return cls.copyFrom(src, { srcCollection: 'test', collection: 'full', withDetail: true })
       })
       .then(result => {
         expect(result.success).to.be.true,
