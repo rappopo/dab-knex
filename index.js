@@ -77,7 +77,7 @@ class DabKnex extends Dab {
                 default:
                   column = table[f.type](f.id)
               }
-              if (f.required)
+              if (f.validator.required)
                 column.notNullable()
               if (f.default !== undefined)
                 column.defaultTo(f.default)
