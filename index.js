@@ -58,6 +58,7 @@ class DabKnex extends Dab {
       super.createCollection(coll)
         .then(result => {
           this.collection[coll.name].attribName = 'table'
+          this.collection[coll.name].attribId = 'id'
           this.setClient()
           let rebuild = params.withSchema && !this._.isEmpty(this.collection[coll.name].fields)
           if (!rebuild)
