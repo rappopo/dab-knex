@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.3
+
+* Updated to @rappopo/dab@0.2.3
+
 ## 0.2.2
 
 * Updated to @rappopo/dab@0.2.2 specs
