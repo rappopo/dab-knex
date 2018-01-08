@@ -40,12 +40,12 @@ describe('createCollection', function () {
     const cls = new Cls(lib.options)
     cls.createCollection({ 
       name: 'newtable',
-      fields: [
-        { id: 'id', type: 'string', default: 'myid', required: true },
-        { id: 'title', type: 'string', required: true },
-        { id: 'draft', type: 'boolean', default: true },
-        { id: 'content', type: 'text', required: true }
-      ]
+      attributes: {
+        id: { type: 'string', default: 'myid', required: true },
+        title: { type: 'string', required: true },
+        draft: { type: 'boolean', default: true },
+        content: { type: 'text', required: true }
+      }
     }, { withSchema: true })
       .then(result => {
         expect(result).to.have.property('success', true)

@@ -57,26 +57,26 @@ class DabKnex extends Dab {
     return new Promise((resolve, reject) => {
       super.createCollection(coll)
         .then(result => {
-          this.collection[coll.name].attribName = 'table'
-          this.collection[coll.name].attribId = 'id'
+          this.collection[coll.name].srcAttribName = 'table'
+          this.collection[coll.name].srcAttribId = 'id'
           this.setClient()
-          let rebuild = params.withSchema && !this._.isEmpty(this.collection[coll.name].fields)
+          let rebuild = params.withSchema && !this._.isEmpty(this.collection[coll.name].attributes)
           if (!rebuild)
             return resolve(result)
           return this.client.schema.dropTableIfExists(coll.name)
         })
         .then(result => {
           return this.client.schema.createTable(coll.name, table => {
-            this._.each(this.collection[coll.name].fields, f => {
+            this._.forOwn(this.collection[coll.name].attributes, (f, id) => {
               let column
               switch(f.type) {
                 case 'string':
-                  column = table.string(f.id, f.length)
+                  column = table.string(id, f.length)
                   break
                 case 'datetime':
-                  column = table.dateTime(f.id)
+                  column = table.dateTime(id)
                 default:
-                  column = table[f.type](f.id)
+                  column = table[f.type](id)
               }
               if (f.validator.required)
                 column.notNullable()
@@ -98,7 +98,7 @@ class DabKnex extends Dab {
       super.renameCollection(oldName, newName)
         .then(result => {
           this.setClient()
-          let rebuild = params.withSchema && !this._.isEmpty(this.collection[newName].fields)
+          let rebuild = params.withSchema && !this._.isEmpty(this.collection[newName].attributes)
           if (!rebuild)
             return resolve(result)
           return this.client.schema.renameTable(oldName, newName)
@@ -112,7 +112,7 @@ class DabKnex extends Dab {
 
   removeCollection (name, params) {
     params = params || {}
-    let rebuild = params.withSchema && this.collection[name] && !this._.isEmpty(this.collection[name].fields)
+    let rebuild = params.withSchema && this.collection[name] && !this._.isEmpty(this.collection[name].attributes)
     return new Promise((resolve, reject) => {
       super.removeCollection(name)
         .then(result => {

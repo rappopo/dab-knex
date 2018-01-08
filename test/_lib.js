@@ -19,27 +19,27 @@ module.exports = {
   },
   schemaFull: {
     name: 'full',
-    fields: [
-      { id: 'id', type: 'string' },
-      { id: 'name', type: 'string' },
-      { id: 'age', type: 'integer' }
-    ]
+    attributes: {
+      id: { type: 'string' },
+      name: { type: 'string' },
+      age: { type: 'integer' }
+    }
   },
   schemaHidden: {
     name: 'hidden',
-    fields: [
-      { id: 'id', type: 'string' },
-      { id: 'name', type: 'string', hidden: true },
-      { id: 'age', type: 'integer' }
-    ]
+    attributes: {
+      id: { type: 'string' },
+      name: { type: 'string', hidden: true },
+      age: { type: 'integer' }
+    }
   },
   schemaMask: {
     name: 'mask',
-    fields: [
-      { id: 'id', type: 'string', mask: '_id' },
-      { id: 'name', type: 'string', mask: 'fullname' },
-      { id: 'age', type: 'integer' }
-    ]
+    attributes: {
+      id: { type: 'string', mask: '_id' },
+      name: { type: 'string', mask: 'fullname' },
+      age: { type: 'integer' }
+    }
   },
   docs: [
     { id: 'jack-bauer', name: 'Jack Bauer' },
