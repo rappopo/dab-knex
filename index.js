@@ -54,11 +54,14 @@ class DabKnex extends Dab {
 
   createCollection (coll, params) {
     params = params || {}
+    if (this._.isPlainObject(coll)) {
+      coll.srcAttribName = 'table'
+      coll.srcAttribId = 'id'
+      coll.srcAttribIdType = 'string'      
+    }
     return new Promise((resolve, reject) => {
       super.createCollection(coll)
         .then(result => {
-          this.collection[coll.name].srcAttribName = 'table'
-          this.collection[coll.name].srcAttribId = 'id'
           this.setClient()
           let rebuild = params.withSchema && !this._.isEmpty(this.collection[coll.name].attributes)
           if (!rebuild)
