@@ -12,10 +12,8 @@ class DabKnex extends Dab {
 
   _buildSort (sort) {
     let result = []
-    this._.each(sort, s => {
-      this._.forOwn(s, (v, k) => {
-        result.push(k + ' ' + v)
-      })
+    this._.forOwn(sort, (v, k) => {
+      result.push(k + ' ' + (v === -1 ? 'desc' : 'asc'))
     })
     return result.join(', ')
   }

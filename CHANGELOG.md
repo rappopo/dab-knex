@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+* Updated to @rappopo/dab@0.5.1
+* Rewrite sort to match the new spec
+
 ## 0.5.0
 
 * Updated to @rappopo/dab@0.5.0
