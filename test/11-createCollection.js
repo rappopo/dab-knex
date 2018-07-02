@@ -31,14 +31,14 @@ describe('createCollection', function () {
     const cls = new Cls(lib.options)
     cls.createCollection({ name: 'test' })
       .then(result => {
-        expect(result).to.have.property('success', true)
+        expect(result).to.be.true
         done()
       })
   })
 
   it('should forced you to rebuild associated table', function (done) {
     const cls = new Cls(lib.options)
-    cls.createCollection({ 
+    cls.createCollection({
       name: 'newtable',
       attributes: {
         id: { type: 'string', default: 'myid', required: true },
@@ -48,7 +48,7 @@ describe('createCollection', function () {
       }
     }, { withSchema: true })
       .then(result => {
-        expect(result).to.have.property('success', true)
+        expect(result).to.be.true
         done()
       })
   })

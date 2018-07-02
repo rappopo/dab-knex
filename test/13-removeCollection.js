@@ -27,14 +27,14 @@ describe('removeCollection', function () {
         return cls.removeCollection('test')
       })
       .then(result => {
-        expect(result).to.have.property('success', true)
+        expect(result).to.be.true
         done()
       })
   })
 
   it('should forced you to destroy associated table', function (done) {
     const cls = new Cls(lib.options)
-    cls.createCollection({ 
+    cls.createCollection({
       name: 'newtable',
       attributes: {
         id: { type: 'string', default: 'myid', required: true },
@@ -47,7 +47,7 @@ describe('removeCollection', function () {
         return cls.removeCollection('newtable', { withSchema: true })
       })
       .then(result => {
-        expect(result).to.have.property('success', true)
+        expect(result).to.be.true
         done()
       })
   })

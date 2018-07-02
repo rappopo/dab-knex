@@ -1,6 +1,6 @@
 {
   "name": "@rappopo/dab-knex",
-  "version": "0.5.1",
+  "version": "0.6.1",
   "description": "A KnexJS data access layer that is so confusing!",
   "main": "index.js",
   "scripts": {
@@ -29,17 +29,17 @@
   "author": "Ardhi Lukianto <ardhi@lukianto.com>",
   "license": "MIT",
   "dependencies": {
-    "@rappopo/dab": "^0.5.1",
-    "async": "^2.6.0",
-    "knex": "^0.14.2",
+    "@rappopo/dab": "^0.6.1",
+    "async": "^2.6.1",
+    "knex": "^0.14.6",
     "knex-doc-filter": "^0.1.0"
   },
   "devDependencies": {
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chai-subset": "^1.6.0",
-    "lodash": "^4.17.4",
-    "sqlite3": "^3.1.13",
+    "lodash": "^4.17.10",
+    "sqlite3": "^4.0.1",
     "uuid": "^3.1.0"
   }
 }

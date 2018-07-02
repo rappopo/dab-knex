@@ -34,7 +34,8 @@ class DabKnex extends Dab {
       client: options.client || 'sqlite3',
       connection: options.connection || {
         filename: '/tmp/default.sqlite3'
-      }
+      },
+      debug: options.debug
     }))
     if (this.options.client === 'sqlite3')
       this.options.options.useNullAsDefault = true
@@ -55,7 +56,7 @@ class DabKnex extends Dab {
     if (this._.isPlainObject(coll)) {
       coll.srcAttribName = 'table'
       coll.srcAttribId = 'id'
-      coll.srcAttribIdType = 'string'      
+      coll.srcAttribIdType = 'string'
     }
     return new Promise((resolve, reject) => {
       super.createCollection(coll)
@@ -87,7 +88,7 @@ class DabKnex extends Dab {
           })
         })
         .then(result => {
-          resolve({ success: true })
+          resolve(true)
         })
         .catch(err => reject(this._error(err)))
     })
@@ -105,7 +106,7 @@ class DabKnex extends Dab {
           return this.client.schema.renameTable(oldName, newName)
         })
         .then(result => {
-          resolve({ success: true })
+          resolve(true)
         })
         .catch(err => reject(this._error(err)))
     })
@@ -123,7 +124,7 @@ class DabKnex extends Dab {
           return this.client.schema.dropTableIfExists(name)
         })
         .then(result => {
-          resolve({ success: true })
+          resolve(true)
         })
         .catch(err => reject(this._error(err)))
     })
@@ -142,15 +143,15 @@ class DabKnex extends Dab {
       .then(result => {
         total = parseInt(result[0].cnt)
         let sel = this.client(params.collection).limit(limit).offset(skip)
-        if (!this._.isEmpty(sort)) 
+        if (!this._.isEmpty(sort))
           sel = sel.orderByRaw(sort)
         return docFilter(sel, query)
       })
       .then(result => {
-        let data = { 
+        let data = {
           success: true,
           total: total,
-          data: [] 
+          data: []
         }
         result.forEach((d, i) => {
           data.data.push(this.convert(d, { collection: params.collection }))
@@ -175,13 +176,13 @@ class DabKnex extends Dab {
         success: true,
         data: data[0]
       }
-      callback(data)        
+      callback(data)
     })
     .catch(err => {
       callback({
         success: false,
         err: this._error(err)
-      })          
+      })
     })
   }
 
@@ -221,7 +222,7 @@ class DabKnex extends Dab {
     return new Promise((resolve, reject) => {
       if (body.id) {
         this._findOne(body.id, params, result => {
-          if (result.success) 
+          if (result.success)
             return reject(new Error('Document already exists'))
           this._create(body, params, result => {
             if (!result.success)
@@ -236,7 +237,7 @@ class DabKnex extends Dab {
             return reject(result.err)
           result.data = this.convert(result.data, { collection: params.collection })
           resolve(result)
-        })        
+        })
       }
     })
   }
@@ -343,7 +344,7 @@ class DabKnex extends Dab {
           if (params.withDetail)
             data.detail = status
           resolve(data)
-        })    
+        })
       })
     })
   }

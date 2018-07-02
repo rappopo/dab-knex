@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.1
+
+* Updated to @rappopo/dab@0.6.1
+
 ## 0.5.1
 
 * Updated to @rappopo/dab@0.5.1
@@ -62,7 +66,7 @@
 ## 0.0.5
 
 * withDetail params in all bulk methods
-* Updated to @rappopo/dab@0.0.6 to have copyFrom & copyTo for free 
+* Updated to @rappopo/dab@0.0.6 to have copyFrom & copyTo for free
 
 ## 0.0.4
 

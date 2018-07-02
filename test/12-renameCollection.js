@@ -42,7 +42,7 @@ describe('renameCollection', function () {
         return cls.renameCollection('test', 'default')
       })
       .then(result => {
-        expect(result).to.have.property('success', true)
+        expect(result).to.be.true
         done()
       })
   })
@@ -54,7 +54,8 @@ describe('renameCollection', function () {
         return cls.renameCollection('full', 'newtest', { withSchema: true })
       })
       .then(result => {
-        expect(result).to.have.property('success', true)
+
+        expect(result).to.be.true
         done()
       })
   })
