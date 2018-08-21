@@ -1,9 +1,9 @@
 'use strict'
 
-const fs = require('fs'),
-  _ = require('lodash'),
-  uuid = require('uuid/v4'),
-  async = require('async')
+const fs = require('fs')
+const _ = require('lodash')
+const uuid = require('uuid/v4')
+const async = require('async')
 
 module.exports = {
   _: _,
@@ -51,8 +51,8 @@ module.exports = {
     let me = this
     try {
       fs.unlinkSync(me.options.connection.filename)
-    } catch(e) {}
-    async.mapSeries(['schema', 'schemaFull', 'schemaHidden', 'schemaMask'], function(s, callb) {
+    } catch (e) {}
+    async.mapSeries(['schema', 'schemaFull', 'schemaHidden', 'schemaMask'], function (s, callb) {
       let knex = require('knex')(me.options)
       knex.schema.hasTable(me[s].name).asCallback((err, exists) => {
         if (err) return callb(err)
@@ -62,18 +62,22 @@ module.exports = {
           table.string('name').notNullable()
           table.string('gender')
           table.integer('age').nullable()
-        }).asCallback(function(err) {
-          knex(me[s].name).del().asCallback(function(err) {
+        }).asCallback(function (err) {
+          if (err) return callb(err)
+          knex(me[s].name).del().asCallback(function (err) {
+            if (err) return callb(err)
             if (!fillIn) return callb(null, null)
             let docs = _.cloneDeep(me.docs)
-            _.each(docs, function(d, i) {
+            _.each(docs, function (d, i) {
               if (!d.id) docs[i].id = uuid()
             })
             knex(me[s].name).insert(docs).asCallback(callb)
+            setTimeout(function () {
+              // knex.destroy(function () {
+              callb()
+              // })
+            }, 5000)
           })
-          setTimeout(function() {
-            callb()
-          }, 5000)
         })
       })
     }, callback)

@@ -1,17 +1,17 @@
 'use strict'
 
-const chai = require('chai'),
-  expect = chai.expect,
-  chaiSubset = require('chai-subset')
+const chai = require('chai')
+const expect = chai.expect
+const chaiSubset = require('chai-subset')
 
 chai.use(chaiSubset)
 
-const Cls = require('../index'),
-  lib = require('./_lib')
+const Cls = require('../index')
+let cls
 
 describe('setOptions', function () {
   it('should return the default options', function () {
-    const cls = new Cls()
+    cls = new Cls()
     expect(cls.options).to.include({
       client: 'sqlite3',
       limit: 25
@@ -23,16 +23,16 @@ describe('setOptions', function () {
   })
 
   it('should return options with custom client type', function () {
-    const cls = new Cls({ 
-      client: 'mysql',
+    cls = new Cls({
+      client: 'mysql'
     })
     expect(cls.options).to.include({
-      client: 'mysql',
+      client: 'mysql'
     })
   })
 
   it('should return options with custom connection', function () {
-    const cls = new Cls({ 
+    cls = new Cls({
       client: 'mysql',
       connection: {
         host: 'localhost'
@@ -45,7 +45,4 @@ describe('setOptions', function () {
       host: 'localhost'
     })
   })
-
 })
-
-

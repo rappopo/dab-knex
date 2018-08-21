@@ -1,6 +1,6 @@
 {
   "name": "@rappopo/dab-knex",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "A KnexJS data access layer that is so confusing!",
   "main": "index.js",
   "scripts": {
@@ -29,9 +29,9 @@
   "author": "Ardhi Lukianto <ardhi@lukianto.com>",
   "license": "MIT",
   "dependencies": {
-    "@rappopo/dab": "^0.6.1",
+    "@rappopo/dab": "^0.6.9",
     "async": "^2.6.1",
-    "knex": "^0.14.6",
+    "knex": "^0.15.2",
     "knex-doc-filter": "^0.1.0"
   },
   "devDependencies": {

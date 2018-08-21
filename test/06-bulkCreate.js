@@ -1,13 +1,15 @@
 'use strict'
 
-const chai = require('chai'),
-  chaiSubset = require('chai-subset'),  
-  expect = chai.expect
+const chai = require('chai')
+const chaiSubset = require('chai-subset')
+const expect = chai.expect
 
 chai.use(chaiSubset)
 
-const Cls = require('../index'),
-  lib = require('./_lib')
+const Cls = require('../index')
+const lib = require('./_lib')
+
+let cls
 
 describe('bulkCreate', function () {
   beforeEach(function (done) {
@@ -18,8 +20,14 @@ describe('bulkCreate', function () {
     }, false)
   })
 
+  afterEach(function (done) {
+    cls.client.destroy(function () {
+      done()
+    })
+  })
+
   it('should return error if collection doesn\'t exist', function (done) {
-    const cls = new Cls(lib.options)
+    cls = new Cls(lib.options)
     cls.createCollection(lib.schema)
       .then(result => {
         return cls.bulkCreate(lib.docs, { collection: 'none' })
@@ -31,7 +39,7 @@ describe('bulkCreate', function () {
   })
 
   it('should return error if body isn\'t an array', function (done) {
-    const cls = new Cls(lib.options)
+    cls = new Cls(lib.options)
     cls.createCollection(lib.schema)
       .then(result => {
         return cls.bulkCreate('test', { collection: 'test' })
@@ -43,7 +51,7 @@ describe('bulkCreate', function () {
   })
 
   it('should return the correct bulk status', function (done) {
-    const cls = new Cls(lib.options)
+    cls = new Cls(lib.options)
     cls.createCollection(lib.schema)
       .then(result => {
         return cls.create(lib.docs[0], { collection: 'test' })
@@ -52,13 +60,12 @@ describe('bulkCreate', function () {
         return cls.bulkCreate(lib.docs, { collection: 'test', withDetail: true })
       })
       .then(result => {
-        expect(result).to.have.property('stat').that.have.property('ok').equal(2),
-        expect(result).to.have.property('stat').that.have.property('fail').equal(1),
-        expect(result).to.have.property('stat').that.have.property('total').equal(3),
-        expect(result).to.have.property('detail').that.containSubset([{ id: 'jack-bauer', message: 'Document already exists', success: false }]),
+        expect(result).to.have.property('stat').that.have.property('ok').equal(2)
+        expect(result).to.have.property('stat').that.have.property('fail').equal(1)
+        expect(result).to.have.property('stat').that.have.property('total').equal(3)
+        expect(result).to.have.property('detail').that.containSubset([{ id: 'jack-bauer', message: 'Document already exists', success: false }])
         expect(result).to.have.property('detail').that.containSubset([{ id: 'johnny-english', success: true }])
         done()
       })
   })
-
 })

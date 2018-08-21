@@ -1,13 +1,15 @@
 'use strict'
 
-const chai = require('chai'),
-  chaiSubset = require('chai-subset'),  
-  expect = chai.expect
+const chai = require('chai')
+const chaiSubset = require('chai-subset')
+const expect = chai.expect
 
 chai.use(chaiSubset)
 
-const Cls = require('../index'),
-  lib = require('./_lib')
+const Cls = require('../index')
+const lib = require('./_lib')
+
+let cls
 
 describe('copyTo', function () {
   beforeEach(function (done) {
@@ -18,9 +20,15 @@ describe('copyTo', function () {
     })
   })
 
+  afterEach(function (done) {
+    cls.client.destroy(function () {
+      done()
+    })
+  })
+
   it('should return error if collection doesn\'t exist', function (done) {
-    const cls = new Cls(lib.options),
-      dest = new Cls(lib.options)
+    cls = new Cls(lib.options)
+    const dest = new Cls(lib.options)
     cls.createCollection(lib.schema)
       .then(result => {
         return dest.createCollection({ name: 'test1' })
@@ -30,13 +38,18 @@ describe('copyTo', function () {
       })
       .catch(err => {
         expect(err).to.be.a('error').and.have.property('message', 'Collection not found')
+      })
+      .then(() => {
+        return dest.client.destroy()
+      })
+      .then(() => {
         done()
       })
   })
 
   it('should return all values correctly', function (done) {
-    const cls = new Cls(lib.options),
-      dest = new Cls(lib.options)
+    cls = new Cls(lib.options)
+    const dest = new Cls(lib.options)
     cls.createCollection(lib.schema)
       .then(result => {
         return dest.createCollection({ name: 'full' })
@@ -48,16 +61,21 @@ describe('copyTo', function () {
         return cls.copyTo(dest, { collection: 'test', destCollection: 'full', withDetail: true })
       })
       .then(result => {
-        expect(result.success).to.be.true,
+        expect(result.success).to.equal(true)
         expect(result.stat).to.have.property('ok', 3)
         expect(result.stat).to.have.property('fail', 0)
         expect(result.stat).to.have.property('total', 3)
+      })
+      .then(() => {
+        return dest.client.destroy()
+      })
+      .then(() => {
         done()
       })
   })
 
   it('should export all values to a file', function (done) {
-    const cls = new Cls(lib.options)
+    cls = new Cls(lib.options)
     cls.createCollection(lib.schema)
       .then(result => {
         return cls.client('test').truncate()
@@ -69,7 +87,7 @@ describe('copyTo', function () {
         return cls.copyTo('/tmp/dab-copy-to.json', { collection: 'test', withDetail: true })
       })
       .then(result => {
-        expect(result.success).to.be.true,
+        expect(result.success).to.equal(true)
         expect(result.stat).to.have.property('ok', 5)
         expect(result.stat).to.have.property('fail', 0)
         expect(result.stat).to.have.property('total', 5)
@@ -78,7 +96,7 @@ describe('copyTo', function () {
   })
 
   it('should export all values to a file with masks', function (done) {
-    const cls = new Cls(lib.options)
+    cls = new Cls(lib.options)
     cls.createCollection(lib.schemaMask)
       .then(result => {
         return cls.client('mask').truncate()
@@ -90,7 +108,7 @@ describe('copyTo', function () {
         return cls.copyTo('/tmp/dab-copy-to.json', { collection: 'mask', withDetail: true })
       })
       .then(result => {
-        expect(result.success).to.be.true,
+        expect(result.success).to.equal(true)
         expect(result.stat).to.have.property('ok', 5)
         expect(result.stat).to.have.property('fail', 0)
         expect(result.stat).to.have.property('total', 5)
@@ -100,7 +118,4 @@ describe('copyTo', function () {
         done()
       })
   })
-
-
-
 })
