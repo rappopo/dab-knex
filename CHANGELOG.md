@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.7
+
+* Updated to @rappopo/dab@0.6.13
+* Bug fix: collections still using the old `withSchema` options
+* Adding support for `array` & `object` column type
+* Index management
+
 ## 0.6.6
 
 * Updated to @rappopo/dab@0.6.12
