@@ -346,7 +346,7 @@ class DabKnex extends Dab {
       if (!this._.isArray(body)) return reject(new Error('Requires an array'))
 
       this._.each(body, (b, i) => {
-        if (!b[coll.srcAttribId]) b[coll.srcAttribId] = this.nanoid(13)
+        if (!b[coll.srcAttribId] && b[coll.srcAttribIdType === 'string']) b[coll.srcAttribId] = this.nanoid(13)
         body[i] = this._transformFrom(b, params)
       })
       const keys = this._(body).map(coll.srcAttribId).value()
@@ -397,7 +397,7 @@ class DabKnex extends Dab {
     return new Promise((resolve, reject) => {
       if (!this._.isArray(body)) return reject(new Error('Requires an array'))
       this._.each(body, (b, i) => {
-        if (!b[coll.srcAttribId]) b[coll.srcAttribId] = this.nanoid(13)
+        if (!b[coll.srcAttribId] && b[coll.srcAttribIdType === 'string']) b[coll.srcAttribId] = this.nanoid(13)
         body[i] = this._transformFrom(b, params)
       })
       const keys = this._(body).map(coll.srcAttribId).value()
