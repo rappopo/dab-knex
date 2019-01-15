@@ -1,7 +1,7 @@
 {
   "name": "@rappopo/dab-knex",
-  "version": "0.6.7",
-  "description": "A KnexJS data access layer that is so confusing!",
+  "version": "0.6.8",
+  "description": "A KnexJS data access layer for @rappopo/dab",
   "main": "index.js",
   "scripts": {
     "test": "mocha --exit"

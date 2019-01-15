@@ -80,7 +80,7 @@ class DabKnex extends Dab {
                   column = table.dateTime(id)
                   break
                 case 'object':
-                  column = table.specificType(id, 'json[]')
+                  column = table.json(id)
                   break
                 case 'array':
                   const subtype = f.subTypeOf || 'json'

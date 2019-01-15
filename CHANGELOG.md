@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.8
+
+* Better support for `object` column type
+
 ## 0.6.7
 
 * Updated to @rappopo/dab@0.6.13
